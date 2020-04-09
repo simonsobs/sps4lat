@@ -1,4 +1,7 @@
-# sps4lat
+[![Latest](https://img.shields.io/badge/docs-dev-blue.svg)](https://simonsobs.github.io/sps4lat/)
+[![Build Status](https://travis-ci.com/simonsobs/sps4lat.svg?branch=master)](https://travis-ci.com/simonsobs/sps4lat
+
+sps4lat
 Semi-parametric component separation for the Large Aperture Telescope
 
 
