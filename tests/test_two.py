@@ -1,6 +1,6 @@
-from package_name import two
+from sps4lat import covariance
 
 def test_add():
     a = 3
     b = 4
-    assert two.multiply(a, b) == (a * b)
+    assert covariance.multiply(a, b) == (a * b)
