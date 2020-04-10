@@ -5,19 +5,26 @@ This module implements routines that will be used in the rest of the project.
 
 import numpy as np
 import healpy as hp
+import sys
 
 __all__ = ['sort_alms_ell', 'get_alms']
 
 
 def sort_alms_ell(alms):
-    """ Function to sort alms by ell. Healpy ordering is (ell,m) = ((0,
-    0), (1, 0), (2, 0), (1, 1), (2, 1), (2, 2)) New ordering will be  (
-    ell,m) = ((0, 0), (1, 0), (1, 1), (2, 0), (2, 1), (2, 2)). This
-    enables faster evaluation of the empirical covariance matrix.
-     :param
-    alms: alms or array of alms to sort , assumes all alms have the same
-    size
-    :return: alms_sorted
+    """ Function to sort alms by ell.
+
+    Healpy ordering is (ell,m) = ((0,0), (1, 0), (2, 0), (1, 1), (2, 1), (2, 2))
+    New ordering will be (ell,m) = ((0, 0), (1, 0), (1, 1), (2, 0), (2, 1), (2, 2)).
+    This enables faster evaluation of the empirical covariance matrix.
+    Parameters
+    ----------
+    alms : ndarray
+        alms to sort by ell, stored in an array of (N_freqs * size)
+    Returns
+    -------
+    alms_sorted : ndarray
+        array of alms sorted by ell
+
     """
     if alms.ndim == 1:
         alms = [alms]
@@ -35,15 +42,24 @@ def sort_alms_ell(alms):
 
 
 def get_alms(maps, beams=None, lmax=None):
-    """ Function to get alms from maps and correct for the beams (if any)
-        beams are assumed to be gaussian
-    :param maps: map, array of maps or list of maps to convert to take the
-                 spherical harmonic transform of.
-    :param beams: beams in arcmin associated with each map
-    :param lmax: if None, lmax = 3*nside-1
-    :return: array of alms
+    """ Function to get alms from maps.
+
+    Correct for the beams (if any). Beams are assumed to be gaussian.
+    Parameters
+    ----------
+    maps : list
+        list containing the frequency maps that have have different nside
+    beams : ndarray
+        beams associated with each map (assumed gaussian)
+    lmax : int
+        max ell to compute the alms
+    Returns
+    -------
+    alms : ndarray
+        array storing the shperical harmonic transform od each freq map.
+
     """
-    if maps.ndim == 1:
+    if not isinstance(maps, list):
         maps = [maps]
     lmax_maps_list = [3 * hp.get_nside(fmap) - 1 for fmap in maps]
     if lmax is None:
@@ -52,11 +68,9 @@ def get_alms(maps, beams=None, lmax=None):
         try:
             assert (all([ll > lmax for ll in lmax_maps_list]))
         except AssertionError:
-            print(
-                "Some maps do not have the neccesary resolution to resolve "
-                "lmax={:d}, setting lmax to {:d} for all maps".format(
-                    int(lmax), int(min(lmax_maps_list))))
-            lmax = min(lmax_maps_list)
+            sys.exit("Some maps do not have the neccesary resolution to "
+                     "resolve lmax={:d}, consider using a smaller "
+                     "lmax".format(int(lmax)))
     alms = []
     for f, fmaps in enumerate(maps):
         alms.append(hp.map2alm(fmaps, lmax=lmax))
@@ -74,5 +88,5 @@ if __name__ == '__main__':
     nside = 12
     npix = hp.nside2npix(nside)
     map_test = np.random.randn(npix)
-    alm_test = get_alms(map_test, beams=[1.])
+    alm_test = get_alms(map_test, beams=np.array([1.]))
     alm_sorted = sort_alms_ell(alm_test)

@@ -5,5 +5,6 @@ API
 .. autosummary::
    :toctree: api/
 
-   package_name.one
-   package_name.two
+   sps4lat.utils
+   sps4lat.covariance
+   sps4lat.model
