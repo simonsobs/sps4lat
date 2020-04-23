@@ -38,9 +38,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'python-template'
-copyright = u'2020, Davide Poletti'
-author = u'Davide Poletti'
+project = u'sps4lat'
+copyright = u'2020, Benjamin Beringue, Davide Poletti'
+author = u'Benjamin Beringue, Davide Poletti'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

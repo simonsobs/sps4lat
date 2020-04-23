@@ -1,8 +1,9 @@
 """ module covariance
 This module implements computation of the empirical covariance matrix.
 """
-
+import sys
 import numpy as np
+
 from sps4lat import utils as utl
 
 __all__ = ['get_covmat', 'get_covmat_maps']
@@ -105,3 +106,45 @@ class Domain:
         self.lmin = lmin
         self.lmax = lmax
         self.lmean = int((lmax + lmin) * .5)
+
+
+def kl_divergence(emp_cov, model_cov, domain_list):
+    """
+    Compute the KL divergence between the empirical covariance matrix and the
+    modelled one
+    Parameters
+    ----------
+    emp_cov : ndarray
+        empirical covmat, shape is : ``(ells,freqs,freqs)``
+    model_cov :ndarray
+        modelled covmat, shape is : ``(ells,freqs,freqs)``
+    domain_list : list
+        List of subdomains across which both matrices have been computed
+    Returns
+    -------
+    KL divergence : measure of the mismatch between the two matrices.
+
+    """
+    try:
+        assert (emp_cov.shape[1] == model_cov.shape[1])
+    except AssertionError:
+        sys.exit('Empirical and modelled covmat have been computed at '
+                 'different frequencies')
+
+    try:
+        assert (emp_cov.shape[0] == model_cov.shape[0] == len(domain_list))
+    except AssertionError:
+        sys.exit('Empirical and modelled covmat have been computed over a'
+                 'different number of subdomains')
+
+    inv_emp_cov = np.linalg.inv(emp_cov)
+    m = emp_cov.shape[1]
+    _, logdet = np.linalg.slogdet(
+        np.einsum('lab,lbc->lac', inv_emp_cov, model_cov))
+    kl = .5 * (np.einsum('lab,lba->l', inv_emp_cov, model_cov) - logdet - m)
+    weights = np.array([d.lmax - d.lmin + 1 for d in domain_list])
+    # BB : think this is wrong, should take number of modes, not number of
+    # multipoles : weights = np.array([(d.lmax - d.lmin + 1) * (
+    # d.lmax+d.lmin+1) for d in domain_list])
+
+    return weights * kl
