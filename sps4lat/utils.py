@@ -48,7 +48,7 @@ def get_alms(maps, beams=None, lmax=None):
     Parameters
     ----------
     maps : list
-        list containing the frequency maps that have have different nside
+        list containing the frequency maps that can have different nside
     beams : ndarray
         beams associated with each map (assumed gaussian)
     lmax : int
@@ -66,7 +66,7 @@ def get_alms(maps, beams=None, lmax=None):
         lmax = min(lmax_maps_list)
     else:
         try:
-            assert (all([ll > lmax for ll in lmax_maps_list]))
+            assert (all([lmax <= ll for ll in lmax_maps_list]))
         except AssertionError:
             sys.exit("Some maps do not have the neccesary resolution to "
                      "resolve lmax={:d}, consider using a smaller "
@@ -85,8 +85,10 @@ def get_alms(maps, beams=None, lmax=None):
 
 
 if __name__ == '__main__':
-    nside = 12
+    nside = 2
     npix = hp.nside2npix(nside)
     map_test = np.random.randn(npix)
     alm_test = get_alms(map_test, beams=np.array([1.]))
     alm_sorted = sort_alms_ell(alm_test)
+    idx = [np.argwhere(alm_test == alm) for alm in alm_sorted]
+    print(idx)

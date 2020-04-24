@@ -136,9 +136,10 @@ def kl_divergence(emp_cov, model_cov, domain_list):
     except AssertionError:
         sys.exit('Empirical and modelled covmat have been computed over a'
                  'different number of subdomains')
-
-    inv_emp_cov = np.linalg.inv(emp_cov)
     m = emp_cov.shape[1]
+    inv_emp_cov = np.linalg.inv(emp_cov)
+    # BB : maybe use np.linalg.solve(emp_cov,np.broadcast_to(np.identity(
+    # m),emp_cov.shape)) instead ?
     _, logdet = np.linalg.slogdet(
         np.einsum('lab,lbc->lac', inv_emp_cov, model_cov))
     kl = .5 * (np.einsum('lab,lba->l', inv_emp_cov, model_cov) - logdet - m)
@@ -147,4 +148,4 @@ def kl_divergence(emp_cov, model_cov, domain_list):
     # multipoles : weights = np.array([(d.lmax - d.lmin + 1) * (
     # d.lmax+d.lmin+1) for d in domain_list])
 
-    return weights * kl
+    return (weights * kl).sum()
