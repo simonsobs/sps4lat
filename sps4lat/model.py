@@ -14,8 +14,8 @@ from fgspectra import frequency as fgf
 class PowerLaw(fgm.Model):
     """Simple power law in frequency and power"""
 
-    def __init__(self, nu_0=250., ell_0=3000., **kwargs):
-        self.set_defaults(nu_0=nu_0, ell_0=ell_0, **kwargs)
+    def __init__(self, **kwargs):
+        self.set_defaults(**kwargs)
 
     def eval(self, nu=None, ell=None, nu_0=None, ell_0=None, beta=None,
              alpha=None):
@@ -48,9 +48,30 @@ class PowerLaw(fgm.Model):
         cov = np.transpose(fg(freqs_param, ells_param), (2, 0, 1))
         return cov
 
+    @property
+    def free_parameters(self):
+        """
+        Returns
+        -------
+        dict containing free parameters of the model
+        """
+        return {k: v for k, v in self.defaults.items()
+                if v is None and k not in ['ell', 'nu']}
+
+    @property
+    def fixed_parameters(self):
+        """
+        Returns
+        -------
+        dict containing fixed parameters of the model ie, one that are
+        specified when model is called
+        """
+        return {k: v for k, v in self.defaults.items() if v is not None}
+
 
 if __name__ == '__main__':
-    pl = PowerLaw()
-    print(pl)
-    cov = pl(np.array([100., 200.]), np.linspace(2, 100, 99), beta=2.5, alpha=3.)
-    print(cov.shape)
+    pl = PowerLaw(nu_0=150., ell_0=1500)
+    print(pl.free_parameters)
+    print(pl.fixed_parameters)
+    cov_model = pl(np.array([100., 200.]), np.linspace(2, 100, 99),
+                   beta=2.5, alpha=3.)

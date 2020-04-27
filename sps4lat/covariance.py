@@ -3,10 +3,9 @@ This module implements computation of the empirical covariance matrix.
 """
 import sys
 import numpy as np
-
 from sps4lat import utils as utl
 
-__all__ = ['get_covmat', 'get_covmat_maps']
+__all__ = ['get_covmat', 'get_covmat_maps','kl_divergence']
 
 
 def get_covmat(alms_sorted, domain_list):

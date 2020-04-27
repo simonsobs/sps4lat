@@ -34,14 +34,14 @@ class UtilsTest(unittest.TestCase):
         """ Test function that computes covmat from alms.
         Test for shape and type of ouput."""
         covmat = cov.get_covmat(self.alms, domain_list=self.domain_list)
-        self.assertIsInstance(covmat.shape, np.ndarray)
+        self.assertIsInstance(covmat, np.ndarray)
         self.assertEqual(covmat.shape, (self.nbins, 5, 5))
 
     def test_get_covmat_maps(self):
         """ Test function that computes covmat from maps.
         Test for shape and type of ouput."""
         covmat = cov.get_covmat_maps(self.maps, domain_list=self.domain_list)
-        self.assertIsInstance(covmat.shape, np.ndarray)
+        self.assertIsInstance(covmat, np.ndarray)
         self.assertEqual(covmat.shape, (self.nbins, 5, 5))
 
     def test_get_covmat_equals(self):
