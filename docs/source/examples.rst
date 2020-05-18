@@ -11,4 +11,3 @@ of your repository
    :glob:
    :maxdepth: 1
 
-   examples/*

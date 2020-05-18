@@ -4,11 +4,40 @@ This module implements computation of the empirical covariance matrix.
 import sys
 import numpy as np
 from sps4lat import utils as utl
+import os
+import healpy as hp
 
-__all__ = ['get_covmat', 'get_covmat_maps','kl_divergence']
+
+class Experiment:
+    def __init__(self, name, lmax, freqs, domain_list, beams=None):
+        self.name = name
+        self.lmax = lmax
+        self.beams = beams
+        self.freqs = freqs
+        self.domain_list = domain_list
+
+    def read_map_file(self, file):
+        """
+        Read maps from fits file.
+        Parameters
+        ----------
+        file : str
+            root of the files containing maps. Each file is located at
+            file + "{:freq}GHz.fits"
+
+        """
+        file_list = [os.path.join(file, "{:d}GHZ.fits".format(int(fr))) for
+                     fr in self.freqs]
+        self.maps = [hp.read_map(f, verbose=False) for f in file_list]
+
+    @property
+    def empirical_covmat(self):
+        """ """
+        return _get_covmat_maps(self.maps, self.domain_list, self.beams,
+                                self.lmax)
 
 
-def get_covmat(alms_sorted, domain_list):
+def _get_covmat(alms_sorted, domain_list):
     """ Compute the empirical covmat on every subdomain in domain_list.
     :param domain_list: list of domains over which the empirical covariance
     will be computed
@@ -31,7 +60,7 @@ def get_covmat(alms_sorted, domain_list):
     return np.array(cov_mat_list)
 
 
-def get_covmat_maps(maps, domain_list, beams=None, lmax=None):
+def _get_covmat_maps(maps, domain_list, beams=None, lmax=None):
     """ Compute the empirical covmat on every subdomain in domain_list.
 
     Parameters
@@ -50,7 +79,7 @@ def get_covmat_maps(maps, domain_list, beams=None, lmax=None):
     """
     alms = utl.get_alms(maps, beams, lmax)
     alms_sorted = utl.sort_alms_ell(alms)
-    return get_covmat(alms_sorted, domain_list)
+    return _get_covmat(alms_sorted, domain_list)
 
 
 def _get_covmat_subdomain(alms_sorted, lmin, lmax):
@@ -75,14 +104,14 @@ def _get_covmat_subdomain(alms_sorted, lmin, lmax):
     covmat = 1. / n_p * np.einsum('is,js ->ij',
                                   alms_sorted[:, idx_start:idx_end],
                                   alms_sorted[:, idx_start:idx_end].conj())
-    return covmat
+    return covmat.real.astype(np.float64)  # TODO Converting to real (BB : is this the way to do it ?)
 
 
 def _get_subdomain(lmin, lmax):
     """ Returns start and end indices.
 
     Assuming alms are sorted by ell returns indices such that
-    alms[idx_start:idx_end] corrsponds to subdomain from lmin to lmax
+    alms[idx_start:idx_end] corresponds to subdomain from lmin to lmax
     Parameters
     ----------
     lmin : int
@@ -105,46 +134,3 @@ class Domain:
         self.lmin = lmin
         self.lmax = lmax
         self.lmean = int((lmax + lmin) * .5)
-
-
-def kl_divergence(emp_cov, model_cov, domain_list):
-    """
-    Compute the KL divergence between the empirical covariance matrix and the
-    modelled one
-    Parameters
-    ----------
-    emp_cov : ndarray
-        empirical covmat, shape is : ``(ells,freqs,freqs)``
-    model_cov :ndarray
-        modelled covmat, shape is : ``(ells,freqs,freqs)``
-    domain_list : list
-        List of subdomains across which both matrices have been computed
-    Returns
-    -------
-    KL divergence : measure of the mismatch between the two matrices.
-
-    """
-    try:
-        assert (emp_cov.shape[1] == model_cov.shape[1])
-    except AssertionError:
-        sys.exit('Empirical and modelled covmat have been computed at '
-                 'different frequencies')
-
-    try:
-        assert (emp_cov.shape[0] == model_cov.shape[0] == len(domain_list))
-    except AssertionError:
-        sys.exit('Empirical and modelled covmat have been computed over a'
-                 'different number of subdomains')
-    m = emp_cov.shape[1]
-    inv_emp_cov = np.linalg.inv(emp_cov)
-    # BB : maybe use np.linalg.solve(emp_cov,np.broadcast_to(np.identity(
-    # m),emp_cov.shape)) instead ?
-    _, logdet = np.linalg.slogdet(
-        np.einsum('lab,lbc->lac', inv_emp_cov, model_cov))
-    kl = .5 * (np.einsum('lab,lba->l', inv_emp_cov, model_cov) - logdet - m)
-    weights = np.array([d.lmax - d.lmin + 1 for d in domain_list])
-    # BB : think this is wrong, should take number of modes, not number of
-    # multipoles : weights = np.array([(d.lmax - d.lmin + 1) * (
-    # d.lmax+d.lmin+1) for d in domain_list])
-
-    return (weights * kl).sum()

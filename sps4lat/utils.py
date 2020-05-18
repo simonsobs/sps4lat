@@ -13,17 +13,12 @@ __all__ = ['sort_alms_ell', 'get_alms']
 def sort_alms_ell(alms):
     """ Function to sort alms by ell.
 
-    Healpy ordering is (ell,m) = ((0,0), (1, 0), (2, 0), (1, 1), (2, 1), (2, 2))
-    New ordering will be (ell,m) = ((0, 0), (1, 0), (1, 1), (2, 0), (2, 1), (2, 2)).
-    This enables faster evaluation of the empirical covariance matrix.
-    Parameters
-    ----------
-    alms : ndarray
-        alms to sort by ell, stored in an array of (N_freqs * size)
-    Returns
-    -------
-    alms_sorted : ndarray
-        array of alms sorted by ell
+    Healpy ordering is (ell,m) = ((0,0), (1, 0), (2, 0), (1, 1), (2, 1),
+    (2, 2)) New ordering will be (ell,m) = ((0, 0), (1, 0), (1, 1), (2,
+    0), (2, 1), (2, 2)). This enables faster evaluation of the empirical
+    covariance matrix. Parameters ---------- alms : ndarray alms to sort
+    by ell, stored in an array of (N_freqs * size) Returns -------
+    alms_sorted : ndarray array of alms sorted by ell
 
     """
     if alms.ndim == 1:

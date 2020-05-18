@@ -24,33 +24,28 @@ class UtilsTest(unittest.TestCase):
                      for _ in range(5)]
         self.alms = np.array([hp.map2alm(m) for m in self.maps])
 
-    def test_kl_divergence(self):
-        """ Test computation of kl divergence.
-        kl of same matrices must be small """
-        kl = cov.kl_divergence(self.cov_kl, self.cov_kl, self.domain_list)
-        self.assertGreater(1e-10, kl)
-
     def test_get_covmat_alms(self):
         """ Test function that computes covmat from alms.
         Test for shape and type of ouput."""
-        covmat = cov.get_covmat(self.alms, domain_list=self.domain_list)
+        covmat = cov._get_covmat(self.alms, domain_list=self.domain_list)
         self.assertIsInstance(covmat, np.ndarray)
         self.assertEqual(covmat.shape, (self.nbins, 5, 5))
 
     def test_get_covmat_maps(self):
         """ Test function that computes covmat from maps.
         Test for shape and type of ouput."""
-        covmat = cov.get_covmat_maps(self.maps, domain_list=self.domain_list)
+        covmat = cov._get_covmat_maps(self.maps,
+                                      domain_list=self.domain_list)
         self.assertIsInstance(covmat, np.ndarray)
         self.assertEqual(covmat.shape, (self.nbins, 5, 5))
 
     def test_get_covmat_equals(self):
         """ Compare covmat computations from maps and alms.
         Difference should be small."""
-        covmat_map = cov.get_covmat_maps(self.maps,
-                                         domain_list=self.domain_list)
-        covmat_alm = cov.get_covmat(self.alms,
-                                    domain_list=self.domain_list)
+        covmat_map = cov._get_covmat_maps(self.maps,
+                                          domain_list=self.domain_list)
+        covmat_alm = cov._get_covmat(self.alms,
+                                     domain_list=self.domain_list)
         self.assertTrue(np.all(np.abs(covmat_map - covmat_alm) <= 1e-5))
         # BB : Seems arbitrary to choose 1e-5 ...
 
