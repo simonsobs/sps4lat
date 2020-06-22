@@ -31,7 +31,7 @@ def sort_alms_ell(alms):
                      range(ll + 1)]
     alms_sorted = []
     for alm in alms:
-        alms_sorted.append(alm[idx_sort])
+        alms_sorted.append(alm[idx_sort, ...])
     alms_sorted = np.array(alms_sorted)
     return alms_sorted
 
@@ -51,7 +51,8 @@ def get_alms(maps, beams=None, lmax=None):
     Returns
     -------
     alms : ndarray
-        array storing the shperical harmonic transform od each freq map.
+        array storing the spherical harmonic transform of each freq map.
+        Shape is ``(freqs, lm, ri)``
 
     """
     if not isinstance(maps, list):
@@ -69,7 +70,6 @@ def get_alms(maps, beams=None, lmax=None):
     alms = []
     for f, fmaps in enumerate(maps):
         alms.append(hp.map2alm(fmaps, lmax=lmax))
-    alms = np.array(alms)
     if beams is not None:
         for fwhm, alm in zip(beams, alms):
             lmax = hp.Alm.getlmax(len(alm))
@@ -78,6 +78,59 @@ def get_alms(maps, beams=None, lmax=None):
                 hp.almxfl(i_alm, 1.0 / i_bl, inplace=True)
     return alms
 
+
+def bin_spectrum(cls, lmin=0, lmax=2000, bin_size=20.):
+    """
+    Bin a spectrum
+    Parameters
+    ----------
+    cls : ndarray
+        spectrum to bin, last dimension has to be ``ells``, going from 0 to
+        LMAX.
+    lmin : int
+        lowest ell to include in the returned spectra.
+    lmax : int
+        largest ell to include in the returned spectra.
+    bin_size : int
+        number of ells in a bin. (all bins are equal for now
+    Returns
+    -------
+    cls_binned : ndarray
+        binned spectrum, last dimension indexes the bins.
+    """
+
+    LMAX = cls.shape[-1] - 1
+    if lmax > LMAX:
+        lmax = LMAX
+    lmin_bins = np.arange(lmin, lmax, bin_size)
+    lmax_bins = np.append(lmin_bins[1:], lmax)
+    cls_binned = np.zeros(cls.shape[:-1] + (len(lmin_bins),))
+    for i in range(len(lmin_bins)):
+        cls_binned[..., i] = cls[..., lmin_bins[i]:lmax_bins[i]].mean(
+            axis=-1)
+    return cls_binned
+
+def get_ell_mean(lmin=0, lmax=2000, bin_size=20.):
+    """
+    Get min ell in bin
+    Parameters
+    ----------
+    lmin : int
+        lowest ell to include in the returned spectra.
+    lmax : int
+        largest ell to include in the returned spectra.
+    bin_size : int
+        number of ells in a bin. (all bins are equal for now
+    Returns
+    -------
+    ell_mean : ndarray
+        mean ell in each bin
+    """
+
+    lmin_bins = np.arange(lmin, lmax, bin_size)
+    lmax_bins = np.append(lmin_bins[1:], lmax)
+    lmean = (lmin_bins+lmax_bins)*.5
+    return lmean
 
 if __name__ == '__main__':
     nside = 2

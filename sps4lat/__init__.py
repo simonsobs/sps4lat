@@ -2,7 +2,7 @@
 
 Operations done when the package is loaded
 """
-from .covariance import *
+from .experiment import *
 from .utils import *
 from .model import *
 from .optimize import *
