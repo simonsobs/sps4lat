@@ -2,8 +2,8 @@
     :target: https://travis-ci.com/simonsobs/sps4lat
 
 .. image:: https://readthedocs.org/projects/sps4lat/badge/?version=latest
-:target: https://sps4lat.readthedocs.io/en/latest/?badge=latest
-:alt: Documentation Status
+    :target: https://sps4lat.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
 
 
 ***************************************
