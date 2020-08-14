@@ -1,8 +1,10 @@
 .. image:: https://travis-ci.com/simonsobs/sps4lat.svg?branch=master
     :target: https://travis-ci.com/simonsobs/sps4lat
 
-.. image:: https://img.shields.io/badge/docs-dev-blue.svg
-    :target: https://simonsobs.github.io/sps4lat/index.html
+.. image:: https://readthedocs.org/projects/sps4lat/badge/?version=latest
+:target: https://sps4lat.readthedocs.io/en/latest/?badge=latest
+:alt: Documentation Status
+
 
 ***************************************
 sps4LAT
