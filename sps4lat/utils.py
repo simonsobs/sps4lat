@@ -76,67 +76,35 @@ def get_alms(maps, beams=None, lmax=None):
             bl = hp.gauss_beam(np.radians(fwhm / 60.0), lmax)
             for i_alm, i_bl in zip(alm, bl.T):
                 hp.almxfl(i_alm, 1.0 / i_bl, inplace=True)
-    return alms
+    return np.array(alms)
 
 
-def bin_spectrum(cls, lmin=0, lmax=2000, bin_size=20.):
+def bin_spectra(ell, spectra, bins):
     """
-    Bin a spectrum
+    Bin sepctra in bins
     Parameters
     ----------
-    cls : ndarray
-        spectrum to bin, last dimension has to be ``ells``, going from 0 to
-        LMAX.
-    lmin : int
-        lowest ell to include in the returned spectra.
-    lmax : int
-        largest ell to include in the returned spectra.
-    bin_size : int
-        number of ells in a bin. (all bins are equal for now
+    ell: ndarray
+        ells for which spectra have been computed
+    spectra : ndarray
+        spectra, last dimension has to be ells
+    bins : ndarray or int
+        if ndarray specifies the bins to use, else, specifies N_bins
     Returns
     -------
-    cls_binned : ndarray
-        binned spectrum, last dimension indexes the bins.
+    ell_means : ndarray
+        mean ell in the bin, shape is ``(N_bins)``
+    spectra_means : ndarray
+        mean spectra in the bin, shape is ``(..., N_bins)``
     """
-
-    LMAX = cls.shape[-1] - 1
-    if lmax > LMAX:
-        lmax = LMAX
-    lmin_bins = np.arange(lmin, lmax, bin_size)
-    lmax_bins = np.append(lmin_bins[1:], lmax)
-    cls_binned = np.zeros(cls.shape[:-1] + (len(lmin_bins),))
-    for i in range(len(lmin_bins)):
-        cls_binned[..., i] = cls[..., lmin_bins[i]:lmax_bins[i]].mean(
-            axis=-1)
-    return cls_binned
-
-def get_ell_mean(lmin=0, lmax=2000, bin_size=20.):
-    """
-    Get min ell in bin
-    Parameters
-    ----------
-    lmin : int
-        lowest ell to include in the returned spectra.
-    lmax : int
-        largest ell to include in the returned spectra.
-    bin_size : int
-        number of ells in a bin. (all bins are equal for now
-    Returns
-    -------
-    ell_mean : ndarray
-        mean ell in each bin
-    """
-
-    lmin_bins = np.arange(lmin, lmax, bin_size)
-    lmax_bins = np.append(lmin_bins[1:], lmax)
-    lmean = (lmin_bins+lmax_bins)*.5
-    return lmean
-
-if __name__ == '__main__':
-    nside = 2
-    npix = hp.nside2npix(nside)
-    map_test = np.random.randn(npix)
-    alm_test = get_alms(map_test, beams=np.array([1.]))
-    alm_sorted = sort_alms_ell(alm_test)
-    idx = [np.argwhere(alm_test == alm) for alm in alm_sorted]
-    print(idx)
+    lmin = int(ell[0])
+    lmax = int(ell[-1])
+    if isinstance(bins, int):  # bins parameter specifies the number of bins
+        bins = np.linspace(lmin, lmax, bins).astype('int')
+    digitized = np.digitize(ell, bins)
+    ell_means = np.array([ell[digitized == i].mean(axis=-1) for i in
+                          range(1, len(bins))]).astype('int')
+    spectra_means = np.array(
+        [spectra[..., digitized == i].mean(axis=-1) for i in
+         range(1, len(bins))])
+    return ell_means, spectra_means

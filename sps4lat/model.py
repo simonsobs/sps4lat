@@ -142,23 +142,3 @@ class FreeCls(Model):
             print('Cls must have same size as ells')
         res = cls
         return res
-
-
-if __name__ == '__main__':
-    cmb = CMB()
-    sed_cmb = FreeSED()
-    white_noise = WhiteNoise()
-    tot = Sum(FactorizedCrossSpectrum(sed=sed_cmb, cl=cmb),
-              white_noise)
-    dict_sed_cmb = dict(sed=np.array([1., 2., 3.]),
-                        nu=np.array([100., 200., 300.]))
-    dict_cl_cmb = dict(ell=np.array([1000., 1500.]))
-    dict_white_noise = dict(ell=np.array([1000., 1500., 2000.]),
-                            nu=np.array([100., 200., 300.]),
-                            nwhite=np.array([1., 2.5, 1.1]))
-    dict_tot = [dict(sed_kwargs=dict_sed_cmb, cl_kwargs=dict_cl_cmb)]
-    cov = tot(kwseq=dict_tot)
-    tot.prepare_for_arrays(dict_tot)
-    ar = tot.kwargs2array(dict_tot)
-    print(tot.defaults)
-    print(cov.shape)
