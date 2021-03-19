@@ -106,5 +106,5 @@ def bin_spectra(ell, spectra, bins):
                           range(1, len(bins))]).astype('int')
     spectra_means = np.array(
         [spectra[..., digitized == i].mean(axis=-1) for i in
-         range(1, len(bins))])
+         range(1, len(bins))]).T
     return ell_means, spectra_means

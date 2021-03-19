@@ -47,7 +47,7 @@ class WhiteNoise(Model):
         elif len(nwhite) != n_freqs:
             print('Got {:d} white noise levels, expected {:d}'.format(
                 len(nwhite), n_freqs))
-        res = np.broadcast_to(np.diag(nwhite), (n_ell, n_freqs, n_freqs))
+        res = np.broadcast_to(np.diag(nwhite**2), (n_ell, n_freqs, n_freqs))
         return np.transpose(res, (1, 2, 0))
 
 
