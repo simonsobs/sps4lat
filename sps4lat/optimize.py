@@ -18,7 +18,7 @@ def optimizable_function(emp_cov, model, param_default, bins):
     cholesky_emp = np.linalg.cholesky(emp_cov.T)
     model.prepare_for_arrays(param_default)
     shape = cholesky_emp.shape
-    id_3d = np.broadcast_to(np.identity(shape[1])[None, ...], shape[0])
+    id_3d = np.broadcast_to(np.identity(shape[1]), shape)
 
     x_old = [None]
     cov_old = [None]
@@ -34,8 +34,13 @@ def optimizable_function(emp_cov, model, param_default, bins):
         """
         # if x is different from the last one, we compute the model.
         if not np.all(x == x_old[0]):
-            cov_old[0], diff_old[0] = model.eval_diff_array(x)
-            cholesky_mod_old[0] = np.linalg.cholesky(cov_old.T)
+            kwargs = model.array2kwargs(x)
+            cov_old[0] = model.eval(**kwargs)
+            diff_old[0] = model.diff_kwargs2array(model.diff(**kwargs))
+            try:
+                cholesky_mod_old[0] = np.linalg.cholesky(cov_old[0].T)
+            except np.linalg.LinAlgError:
+                print(kwargs)
             x_old[0] = x
 
     def f_optim(x):
@@ -55,34 +60,31 @@ def optimizable_function(emp_cov, model, param_default, bins):
     return f_optim, diff_kl
 
 
-def kl_divergence(cholesky_emp, choleky_mod, weights):
+def kl_divergence(cholesky_emp, cholesky_mod, weights):
     """
 
     :param cholesky_emp: ndaray
          cholseky decomposition of the empircal cavmat (computed outside this
          function)
-    :param choleky_mod: ndarray
+    :param cholesky_mod: ndarray
         chelseky decomposition of the model covmat (computed outside this
         function)
     :param weights
     :return: float : kl divergence
     """
     m = cholesky_emp.shape[1]
-    Z = np.linalg.solve(choleky_mod, cholesky_emp)
+    Z = np.linalg.solve(cholesky_mod, cholesky_emp)
+    # Z = np.linalg.solve(cholesky_emp, cholesky_mod)
     log_det = np.sum(np.log(np.diagonal(Z, axis1=1, axis2=2)), axis=-1)
     k = .5 * (np.einsum('lij,lij->l', Z, Z) - 2. * log_det - m)
     return (k.dot(weights)).sum()
 
 
-def optimiser_test(emp_cov, model, param_start, bins):
+def optimiser_test(emp_cov, model, param_start, bins, deriv=True, kwargs_opt={}):
     f_optim, jac = optimizable_function(emp_cov, model, param_start, bins)
+    if not deriv:
+        jac = None
     theta_start = model.kwargs2array(param_start)
-    mins = np.zeros(len(theta_start)) + 1e-25
-    mins[-4:] = - np.inf
-    bounds = opt.Bounds(lb=mins,
-                        ub=np.inf * np.ones(len(theta_start)),
-                        keep_feasible=False)
-    res = opt.minimize(f_optim, x0=theta_start, tol=1e-5, bounds=bounds,
-                       jac=jac, options={'maxiter': 1e6, 'disp': True})
+    res = opt.minimize(f_optim, x0=theta_start, jac=jac, **kwargs_opt)
     param_opt = model.array2kwargs(res.x)
-    return param_opt
+    return param_opt, res
