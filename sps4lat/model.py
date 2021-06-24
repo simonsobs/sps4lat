@@ -45,13 +45,22 @@ class CMB(Model):
         return amp*res
 
     def diff(self, **kwargs):
-        defaults = self.defaults
-        res = {}
+        if 'ell' in kwargs:
+            raise NotImplementedError(
+                'Derivatives with respect to ell not implemented')
 
-        amp = defaults['amp']
-        if amp is None:
-            res['amp'] = self.eval(amp=1.0)[None]
-        return res
+        defaults = self.defaults
+
+        if defaults['amp'] is not None:
+            return {}
+
+        amp = np.asarray(kwargs['amp'])
+        ell = defaults['ell']
+        res = np.zeros((amp.size, amp.size, ell.size))
+
+        np.einsum('aal->al', res)[:] = self.eval(ell=ell, amp=1.)
+
+        return {'amp': res}
 
 
 
