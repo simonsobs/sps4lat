@@ -103,9 +103,9 @@ class GroundBasedNoise(Model):
         N = len(nu)
         noise = np.zeros((N, N, n_ell))
         for i in range(N):
-            noise[i, i, :] = nred[i] * (ell / ell_knee[i]) ** alpha_knee[i] + \
+            noise[i, i, :] = nred[i] * (ell / ell_knee) ** alpha_knee + \
                              nwhite[i]
-        return noise
+        return np.einsum('ijl,l->ijl', noise, ell*(ell+1)/2./np.pi)
 
     def diff(self, nu=None, ell=None, nwhite=None, nred=None, ell_knee=None,
              alpha_knee=None):
