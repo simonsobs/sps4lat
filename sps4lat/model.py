@@ -18,9 +18,10 @@ class CMB(Model):
         super().__init__(**kwargs)
         ell_read, cmb_tt_read = np.loadtxt("../data/cmb.dat", usecols=(0, 1),
                                            unpack=True)
-        self.cmb_tt = np.concatenate((np.zeros(2), cmb_tt_read /
-                                      (ell_read * (ell_read + 1) /
-                                       2. / np.pi)))
+        # self.cmb_tt = np.concatenate((np.zeros(2), cmb_tt_read /
+        #                               (ell_read * (ell_read + 1) /
+        #                                2. / np.pi)))
+        self.cmb_tt = np.concatenate((np.zeros(2), cmb_tt_read ))
 
     def eval(self, ell=None, amp=1.):
         """ Evaluation of the model
