@@ -59,8 +59,9 @@ class CMB(Model):
         res = np.zeros((amp.size, amp.size, ell.size))
 
         np.einsum('aal->al', res)[:] = self.eval(ell=ell, amp=1.)
+        res_amp = res.reshape((amp.size,) + amp.shape + ell.shape)
 
-        return {'amp': res}
+        return {'amp': res_amp}
 
 
 
@@ -113,7 +114,7 @@ class GroundBasedNoise(Model):
         noise = np.zeros((N, N, n_ell))
         for i in range(N):
             noise[i, i, :] = nred[i] * (ell / ell_knee) ** alpha_knee + \
-                             nwhite[i]
+                             nwhite[i]**2
         return np.einsum('ijl,l->ijl', noise, ell*(ell+1)/2./np.pi)
 
     def diff(self, nu=None, ell=None, nwhite=None, nred=None, ell_knee=None,
@@ -159,12 +160,4 @@ class GroundBasedNoise(Model):
         np.fill_diagonal(diff_nwhite_ell, 2. * nwhite)
         diff_nwhite = np.broadcast_to(diff_nwhite_ell,
                                       (n_ell, n_freqs, n_freqs, n_freqs)).T
-        diff_ell_knee = np.einsum('ij,l->ijl',
-                                  -alpha_knee * ell ** alpha_knee * ell_knee ** (
-                                          -alpha_knee - 1), np.diag(nred))
-        diff_alpha_knee = np.einsum('ij,l->ijl',
-                                    np.log(ell / ell_knee) * (
-                                                ell / ell_knee) ** alpha_knee
-                                    , np.diag(nred))
-        return {'nu': None, 'ell': None, 'nwhite': diff_nwhite,
-                'ell_knee': diff_ell_knee, 'alpha_knee': diff_alpha_knee}
+        return {'nwhite': diff_nwhite}
