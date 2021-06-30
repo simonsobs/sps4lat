@@ -69,7 +69,7 @@ class GroundBasedNoise(Model):
     """White + atmospheric noise"""
 
     def eval(self, nu=None, ell=None, nwhite=None, nred=None, ell_knee=None,
-             alpha_knee=None):
+             alpha_knee=None, beam=None):
         """ Evaluation of the model
 
         Parameters
@@ -113,12 +113,12 @@ class GroundBasedNoise(Model):
         N = len(nu)
         noise = np.zeros((N, N, n_ell))
         for i in range(N):
-            noise[i, i, :] = nred[i] * (ell / ell_knee) ** alpha_knee + \
-                             nwhite[i]**2
+            noise[i, i, :] = nred[i] * (ell / ell_knee) ** alpha_knee + nwhite[i]**2
+            noise[i, i, :] *= np.exp(ell*(ell+1.)*(beam[i]*np.pi/180./60.)**2/8./np.log(2))
         return np.einsum('ijl,l->ijl', noise, ell*(ell+1)/2./np.pi)
 
     def diff(self, nu=None, ell=None, nwhite=None, nred=None, ell_knee=None,
-             alpha_knee=None):
+             alpha_knee=None, beam=None):
         """ Evaluation of the derivative of the model
 
         Parameters
@@ -156,8 +156,8 @@ class GroundBasedNoise(Model):
                 len(nwhite), n_freqs))
         if type(nred) in (float, int):
             nred = [nred]
-        diff_nwhite_ell = np.zeros((n_freqs, n_freqs, n_freqs))
-        np.fill_diagonal(diff_nwhite_ell, 2. * nwhite)
-        diff_nwhite = np.broadcast_to(diff_nwhite_ell,
-                                      (n_ell, n_freqs, n_freqs, n_freqs)).T
+        diff_nwhite = np.zeros((n_freqs, n_freqs, n_freqs))
+        for i in range(N):
+            diff_nwhite[i, i, :] = nwhite[i]*2.
+            diff_nwhite[i, i, :] *= np.exp(ell*(ell+1.)*(beam[i]*np.pi/180./60.)**2/8./np.log(2))
         return {'nwhite': diff_nwhite}
