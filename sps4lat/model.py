@@ -157,7 +157,8 @@ class GroundBasedNoise(Model):
         if type(nred) in (float, int):
             nred = [nred]
         diff_nwhite = np.zeros((n_freqs, n_freqs, n_freqs))
-        for i in range(N):
-            diff_nwhite[i, i, :] = nwhite[i]*2.
-            diff_nwhite[i, i, :] *= np.exp(ell*(ell+1.)*(beam[i]*np.pi/180./60.)**2/8./np.log(2))
+        for i in range(n_freqs):
+            diff_nwhite[i, i, :] = nwhite[i] * 2.
+            diff_nwhite[i, i, :] *= np.exp(ell * (ell + 1.) * (
+                        beam[i] * np.pi / 180. / 60.) ** 2 / 8. / np.log(2))
         return {'nwhite': diff_nwhite}
