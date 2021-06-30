@@ -137,8 +137,8 @@ class GroundBasedNoise(Model):
             Each key corresponds to the the derivative with respect to a parameter.
         """
         (nu, ell, nwhite, red, ell_knee,
-         alpha_knee) = self._replace_none_args(
-            (nu, ell, nwhite, nred, ell_knee, alpha_knee))
+         alpha_knee, beam) = self._replace_none_args(
+            (nu, ell, nwhite, nred, ell_knee, alpha_knee, beam))
         if type(nu) in (float, int):
             nu = [nu]
         n_freqs = len(nu)
