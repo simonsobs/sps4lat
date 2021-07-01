@@ -161,4 +161,4 @@ class GroundBasedNoise(Model):
             diff_nwhite[i, i, i] = nwhite[i] * 2.
             diff_nwhite[i, i, i] *= np.exp(ell * (ell + 1.) * (
                         beam[i] * np.pi / 180. / 60.) ** 2 / 8. / np.log(2))
-        return {'nwhite': diff_nwhite}
+        return {'nwhite': np.einsum('ijkl,l->ijkl', noise, ell*(ell+1)/2./np.pi)}
