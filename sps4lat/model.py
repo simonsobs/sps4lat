@@ -136,7 +136,7 @@ class GroundBasedNoise(Model):
         diff: dict
             Each key corresponds to the the derivative with respect to a parameter.
         """
-        (nu, ell, nwhite, red, ell_knee,
+        (nu, ell, nwhite, nred, ell_knee,
          alpha_knee, beam) = self._replace_none_args(
             (nu, ell, nwhite, nred, ell_knee, alpha_knee, beam))
         if type(nu) in (float, int):
@@ -154,11 +154,16 @@ class GroundBasedNoise(Model):
         elif len(nwhite) != n_freqs:
             print('Got {:d} white noise levels, expected {:d}'.format(
                 len(nwhite), n_freqs))
-        if type(nred) in (float, int):
-            nred = [nred]
+
         diff_nwhite = np.zeros((n_freqs, n_freqs, n_freqs, n_ell))
         for i in range(n_freqs):
             diff_nwhite[i, i, i] = nwhite[i] * 2.
             diff_nwhite[i, i, i] *= np.exp(ell * (ell + 1.) * (
                         beam[i] * np.pi / 180. / 60.) ** 2 / 8. / np.log(2))
-        return {'nwhite': np.einsum('ijkl,l->ijkl', noise, ell*(ell+1)/2./np.pi)}
+        diff_nred = np.zeros((n_freqs, n_freqs, n_freqs, n_ell))
+        for i in range(n_freqs):
+            diff_nred[i, i, i] = (ell / ell_knee) ** alpha_knee
+            diff_nred[i, i, i] *= np.exp(ell * (ell + 1.) * (
+                        beam[i] * np.pi / 180. / 60.) ** 2 / 8. / np.log(2))
+        return {'nwhite': np.einsum('ijkl,l->ijkl', diff_nwhite, ell*(ell+1)/2./np.pi),
+                'nred': np.einsum('ijkl,l->ijkl', diff_nred, ell*(ell+1)/2./np.pi)}
